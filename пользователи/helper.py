@@ -22,15 +22,10 @@ async def helper_reply(message: Message, bot: Bot):
 @helper_router.message(F.chat.id == -1003627692695, F.message_thread_id == 232, F.reply_to_message)
 async def post_reply(message: Message, bot: Bot):
     replied_msg = message.reply_to_message
-    
-    if not replied_msg:
-        return
-    
-    current_msg = replied_msg
-    
-    for _ in range(5):
-        if current_msg.text and 'ПОСТ НА МОДЕРАЦИЮ' in current_msg.text:
-            lines = current_msg.text.split('\n')
+    if replied_msg and replied_msg.reply_to_message:
+        admin_msg = replied_msg.reply_to_message
+        if admin_msg and 'ПОСТ НА МОДЕРАЦИЮ' in admin_msg.text:
+            lines = admin_msg.text.split('\n')
             user_id_line = next((line for line in lines if 'ID:' in line), '')
             if 'ID:' in user_id_line:
                 user_id = user_id_line.split('ID:')[1].strip().replace('<code>', '').replace('</code>', '')
@@ -40,9 +35,3 @@ async def post_reply(message: Message, bot: Bot):
                         text=f'📨 <b>Ответ от администратора на ваш пост:</b>\n\n{message.text}',
                         parse_mode='HTML')
                     await message.reply('✅ Ответ отправлен автору поста')
-                return
-        
-        if current_msg.reply_to_message:
-            current_msg = current_msg.reply_to_message
-        else:
-            break
