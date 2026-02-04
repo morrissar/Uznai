@@ -4,18 +4,29 @@ import os
 import sys
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
-from пользователи.helper import helper_router
+
 load_dotenv()
-from пользователи.user import user
 
 post_user_map = {}
 
 async def main():
     token = os.getenv('TOKEN')
+    if not token:
+        print("❌ TOKEN не найден в .env файле")
+        sys.exit(1)
+    
     bot = Bot(token=token)
     dp = Dispatcher()
+
+    from пользователи.helper import helper_router
+    from пользователи.user import user, meme_router
+    
     dp.include_router(user)
-    dp.include_router(helper_router)    
+    dp.include_router(helper_router)
+    dp.include_router(meme_router)  
+    
+    print("✅ Бот запущен...")
+    
     try:
         await dp.start_polling(bot)
     finally:
