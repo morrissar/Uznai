@@ -30,8 +30,7 @@ MEMES_FOLDER = "memes"
 async def send_meme(message: Message, bot: Bot):
     if message.chat.id not in ALLOWED_CHATS:
         return
-    if not os.path.exists(MEMES_FOLDER):
-        memes = [file for file in os.listdir(MEMES_FOLDER) if file.lower().endswith('.jpg')]
+    memes = [file for file in os.listdir(MEMES_FOLDER) if file.lower().endswith('.jpg')]
     random_meme = random.choice(memes)
     meme_path = os.path.join(MEMES_FOLDER, random_meme)
     photo = FSInputFile(meme_path)
@@ -233,4 +232,5 @@ async def on_group_message(message: Message, bot: Bot):
             reply_to_message_id=message.message_id,
             text=text,
             parse_mode='HTML')
+
 
