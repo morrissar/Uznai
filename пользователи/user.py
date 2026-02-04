@@ -7,7 +7,6 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram import F
-
 import кнопки.keyboards as kb
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
@@ -37,13 +36,11 @@ async def start(message: Message, bot: Bot):
             parse_mode='HTML'
         )
         return
-    
     await message.bot.send_chat_action(chat_id=message.from_user.id, action=ChatAction.TYPING)
     await message.answer('👋 Привет! Мы - "Узнай за УИ"!\nДля ознакомления с функционалом бота посмотрите на кнопки.', 
     reply_markup=kb.main)
 
 async def check_subscription_wrapper(message: Message, bot: Bot) -> bool:
-    """Обертка для проверки подписки в хэндлерах"""
     if not await check_subscription(message.from_user.id, bot):
         await message.answer(
             "❌ Для использования бота необходимо подписаться на канал <a href='https://t.me/yznay138'>Узнай за УИ</a>\n\nПодпишитесь и нажмите /start снова.", 
@@ -56,7 +53,6 @@ async def check_subscription_wrapper(message: Message, bot: Bot) -> bool:
 async def contacts(message: Message, state: FSMContext, bot: Bot):
     if not await check_subscription_wrapper(message, bot):
         return
-    
     await message.bot.send_chat_action(chat_id=message.from_user.id, action=ChatAction.TYPING)
     await message.answer(
     '<b>📞 Контакты руководства</b>\n\n'
@@ -77,7 +73,6 @@ async def contacts(message: Message, state: FSMContext, bot: Bot):
 async def soglash(message: Message, state: FSMContext, bot: Bot):
     if not await check_subscription_wrapper(message, bot):
         return
-    
     await message.bot.send_chat_action(chat_id=message.from_user.id, action=ChatAction.TYPING)
     await message.answer('📜 Вот ссылка на Пользовательское соглашение: https://telegra.ph/POLZOVATELSKOE-SOGLASHENIE-01-25-31', 
     reply_markup=kb.after_soglash)
@@ -93,7 +88,6 @@ predlozhit_post_keyboard = ReplyKeyboardMarkup(
 async def make_post(message: Message, state: FSMContext, bot: Bot):
     if not await check_subscription_wrapper(message, bot):
         return
-    
     await message.bot.send_chat_action(chat_id=message.from_user.id, action=ChatAction.TYPING)
     await message.answer('👁️ Если Вы гарантируете, что прочли <i>Пользовательское соглашение</i>, то мы ожидаем ваш пост! Он сразу же отправится на модерацию.',
     reply_markup=predlozhit_post_keyboard,
@@ -104,7 +98,6 @@ async def make_post(message: Message, state: FSMContext, bot: Bot):
 async def delete_post(message: Message, state: FSMContext, bot: Bot):
     if not await check_subscription_wrapper(message, bot):
         return
-    
     await message.bot.send_chat_action(chat_id=message.from_user.id, action=ChatAction.TYPING)
     await message.answer('🗑️ <b>Выберите тип удаления:</b>\n\n'
                          '💎 <b>Платное удаление</b> (15 звезд)\n'
@@ -178,12 +171,12 @@ async def back_to_menu(message: Message, state: FSMContext):
 
 @user.message(PostStates.waiting_for_post)
 async def process_any_post(message: Message, state: FSMContext, bot: Bot):
+    from app import post_user_map
     if message.text == 'Назад в меню':
         await state.clear()
         await message.answer('👋 Привет! Мы - "Узнай за УИ"!\nДля ознакомления с функционалом бота посмотрите на кнопки.',
                              reply_markup=kb.main)
         return
-    
     user_id = message.from_user.id
     username = f'@{message.from_user.username}' if message.from_user.username else 'без username'
     full_name = message.from_user.full_name
@@ -191,26 +184,29 @@ async def process_any_post(message: Message, state: FSMContext, bot: Bot):
                   f'👤 Отправитель: {full_name}\n'
                   f'🔗 {username} | ID: <code>{user_id}</code>\n'
                   f'📅 {message.date.strftime("%d.%m.%Y %H:%M:%S")}')
-    
     if message.text:
         quoted_text = f'<blockquote expandable>{message.text}</blockquote>'
         new_text = quoted_text + "\n\n<a href='https://t.me/yznay138'>Узнай за УИ</a>"
         post_msg = await bot.send_message(chat_id=-1003627692695, message_thread_id=232, text=new_text, parse_mode='HTML', disable_web_page_preview=True)
+        post_user_map[post_msg.message_id] = user_id
     elif message.photo and message.caption:
         new_caption = message.caption + "\n\n<a href='https://t.me/yznay138'>Узнай за УИ</a>"
         post_msg = await bot.send_photo(chat_id=-1003627692695, message_thread_id=232, photo=message.photo[-1].file_id, caption=new_caption, parse_mode='HTML')
+        post_user_map[post_msg.message_id] = user_id
     elif message.photo:
         post_msg = await bot.send_photo(chat_id=-1003627692695, message_thread_id=232, photo=message.photo[-1].file_id, caption="<a href='https://t.me/yznay138'>Узнай за УИ</a>", parse_mode='HTML')
+        post_user_map[post_msg.message_id] = user_id    
     elif message.video and message.caption:
         new_caption = message.caption + "\n\n<a href='https://t.me/yznay138'>Узнай за УИ</a>"
         post_msg = await bot.send_video(chat_id=-1003627692695, message_thread_id=232, video=message.video.file_id, caption=new_caption, parse_mode='HTML')
+        post_user_map[post_msg.message_id] = user_id    
     elif message.video:
         post_msg = await bot.send_video(chat_id=-1003627692695, message_thread_id=232, video=message.video.file_id, caption="<a href='https://t.me/yznay138'>Узнай за УИ</a>", parse_mode='HTML')
+        post_user_map[post_msg.message_id] = user_id
     else:
         post_msg = await bot.copy_message(chat_id=-1003627692695, from_chat_id=message.chat.id, message_id=message.message_id, message_thread_id=232)
-    
+        post_user_map[post_msg.message_id] = user_id
     await bot.send_message(chat_id=-1003627692695, message_thread_id=232, text=admin_info, parse_mode='HTML', reply_to_message_id=post_msg.message_id)
-    
     await message.answer('✅ <b>Пост отправлен на модерацию!</b>\nАдминистратор проверит его в ближайшее время.', 
                          reply_markup=kb.main, 
                          parse_mode='HTML')
