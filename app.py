@@ -9,6 +9,8 @@ from пользователи.helper import helper_router
 load_dotenv()
 from пользователи.user import user
 
+post_user_map = {}
+
 async def main():
     token = os.getenv('TOKEN')
     bot = Bot(token=token)
