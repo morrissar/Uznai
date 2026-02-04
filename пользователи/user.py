@@ -1,6 +1,7 @@
 import asyncio
+import random
 from datetime import datetime
-from aiogram.types import Message
+from aiogram.types import Message, FSInputFile
 from aiogram import Router, Bot
 from aiogram.enums import ChatAction
 from aiogram.filters import CommandStart
@@ -21,12 +22,24 @@ class DeleteStates(StatesGroup):
 
 user = Router()
 
+meme_router = Router()
+ALLOWED_CHATS = [-1003627692695, -1003607675754]
+MEMES_FOLDER = "memes"
+
+@meme_router.message(F.text.lower() == "мем")
+async def send_meme(message: Message, bot: Bot):
+    if message.chat.id not in ALLOWED_CHATS:
+        return
+    if not os.path.exists(MEMES_FOLDER):
+        memes = [file for file in os.listdir(MEMES_FOLDER) if file.lower().endswith('.jpg')]
+    random_meme = random.choice(memes)
+    meme_path = os.path.join(MEMES_FOLDER, random_meme)
+    photo = FSInputFile(meme_path)
+    await message.answer_photo(photo, caption="🤡 Ваш мем!")
+
 async def check_subscription(user_id: int, bot: Bot) -> bool:
-    try:
-        member = await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
-        return member.status in ['member', 'administrator', 'creator']
-    except Exception:
-        return False
+    member = await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
+    return member.status in ['member', 'administrator', 'creator']
 
 @user.message(CommandStart())
 async def start(message: Message, bot: Bot):
@@ -220,3 +233,4 @@ async def on_group_message(message: Message, bot: Bot):
             reply_to_message_id=message.message_id,
             text=text,
             parse_mode='HTML')
+
