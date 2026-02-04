@@ -8,8 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 post_user_map = {}
+from пользователи.user import user
+dp.include_router(user)
 
-# Увеличьте уровень логирования
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
@@ -45,3 +46,4 @@ async def main():
 
 if __name__ == '__main__':
     asyncio.run(main())
+
