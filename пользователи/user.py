@@ -30,63 +30,46 @@ meme_router = Router()
 ALLOWED_CHATS = [-1003627692695, -1003607675754]
 MEMES_FOLDER = "memes"
 
-# Добавьте этот хендлер для отладки
-@meme_router.message(F.text == "тест")
-async def test_handler(message: Message):
-    logger.info(f"Тестовое сообщение от {message.from_user.id} в чате {message.chat.id}: {message.text}")
-    await message.answer(f"✅ Бот работает! Чат ID: {message.chat.id}")
-
 @meme_router.message(F.text.lower() == "мем")
 async def send_meme(message: Message, bot: Bot):
-    logger.info(f"Получено 'мем' от {message.from_user.id} в чате {message.chat.id}")
-    
     if message.chat.id not in ALLOWED_CHATS:
-        logger.warning(f"Чат {message.chat.id} не в разрешенных списке: {ALLOWED_CHATS}")
         return
     
-    logger.info(f"Чат {message.chat.id} разрешен, ищем мемы...")
-    
-    # Проверяем папку
     if not os.path.exists(MEMES_FOLDER):
-        logger.error(f"Папка {MEMES_FOLDER} не существует!")
         await message.answer("❌ Папка 'memes' не найдена!")
         return
     
     memes = [file for file in os.listdir(MEMES_FOLDER) if file.lower().endswith('.jpg')]
-    logger.info(f"Найдено мемов: {len(memes)}")
     
     if not memes:
-        logger.warning("Нет мемов в папке!")
         await message.answer("❌ Нет мемов в папке 'memes'!")
         return
     
     random_meme = random.choice(memes)
     meme_path = os.path.join(MEMES_FOLDER, random_meme)
-    logger.info(f"Выбран мем: {random_meme}")
+    photo = FSInputFile(meme_path)
     
-    try:
-        photo = FSInputFile(meme_path)
-        if message.chat.id == -1003627692695:
-            logger.info(f"Отправляем в чат {message.chat.id}, топик 1")
-            await bot.send_photo(
-                chat_id=message.chat.id,
-                message_thread_id=1,
-                photo=photo,
-                caption="🤡 Ваш мем!"
-            )
-        else:
-            logger.info(f"Отправляем в обычный чат {message.chat.id}")
-            await message.answer_photo(photo, caption="🤡 Ваш мем!")
+    # Если сообщение пришло из топика, отвечаем в тот же топик
+    if message.message_thread_id:
+        # Отправляем в тот же топик, откуда пришло сообщение
+        await bot.send_photo(
+            chat_id=message.chat.id,
+            message_thread_id=message.message_thread_id,
+            photo=photo,
+            caption="🤡 Ваш мем!"
+        )
+    elif message.chat.id == -1003627692695:
+        # Если нет топика, но это чат с топиками, отправляем в топик 1
+        await bot.send_photo(
+            chat_id=message.chat.id,
+            message_thread_id=1,
+            photo=photo,
+            caption="🤡 Ваш мем!"
+        )
+    else:
+        # Обычный чат без топиков
+        await message.answer_photo(photo, caption="🤡 Ваш мем!")
         
-        logger.info("Мем отправлен успешно!")
-    except Exception as e:
-        logger.error(f"Ошибка при отправке мема: {e}")
-        await message.answer(f"❌ Ошибка: {e}")
-
-async def check_subscription(user_id: int, bot: Bot) -> bool:
-    member = await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
-    return member.status in ['member', 'administrator', 'creator']
-
 @user.message(CommandStart())
 async def start(message: Message, bot: Bot):
     if not await check_subscription(message.from_user.id, bot):
@@ -208,4 +191,5 @@ async def on_group_message(message: Message, bot: Bot):
     if message.sender_chat and message.sender_chat.id == -1003550629921: 
         text = '📨 Опубликовать/удалить пост или написать админам - @UznaiZaUI_bot'
         await bot.send_message(chat_id=-1003607675754,reply_to_message_id=message.message_id,text=text,parse_mode='HTML')
+
 
