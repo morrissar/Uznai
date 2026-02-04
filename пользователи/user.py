@@ -19,22 +19,22 @@ class DeleteStates(StatesGroup):
     waiting_for_anketa = State()
 
 user = Router()
-meme_router = Router()
-ALLOWED_CHATS = [-1003607675754] 
-MEMES_FOLDER = "memes"
 
 @user.message(F.text.lower() == "мем")
 async def send_meme(message: Message, bot: Bot):
+    # Только для чата -1003607675754
     if message.chat.id != -1003607675754:
         return
     
     if not os.path.exists("memes"):
+        await message.answer("❌ Нет папки memes!")
         return
     
     memes = [f for f in os.listdir("memes") if f.lower().endswith('.jpg')]
     if not memes:
+        await message.answer("❌ Нет мемов в папке!")
         return
-        
+    
     random_meme = random.choice(memes)
     meme_path = os.path.join("memes", random_meme)
     photo = FSInputFile(meme_path)
@@ -150,4 +150,3 @@ async def process_any_post(message: Message, state: FSMContext, bot: Bot):
 async def on_group_message(message: Message, bot: Bot):
     if message.sender_chat and message.sender_chat.id == -1003550629921: 
         await bot.send_message(chat_id=-1003607675754,reply_to_message_id=message.message_id,text='📨 @UznaiZaUI_bot',parse_mode='HTML')
-
