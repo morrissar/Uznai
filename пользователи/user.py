@@ -20,18 +20,30 @@ class DeleteStates(StatesGroup):
 
 user = Router()
 meme_router = Router()
-ALLOWED_CHATS = [-1003627692695, -1003607675754]
+ALLOWED_CHATS = [-1003607675754]  # ТОЛЬКО ЭТОТ ЧАТ
 MEMES_FOLDER = "memes"
 
 @meme_router.message(F.text.lower() == "мем")
 async def send_meme(message: Message, bot: Bot):
     if message.chat.id not in ALLOWED_CHATS:
         return
+    
     memes = [file for file in os.listdir(MEMES_FOLDER) if file.lower().endswith('.jpg')]
+    
+    if not memes:
+        await message.answer("❌ Нет мемов в папке!")
+        return
+    
     random_meme = random.choice(memes)
     meme_path = os.path.join(MEMES_FOLDER, random_meme)
     photo = FSInputFile(meme_path)
-    await message.answer_photo(photo, caption="🤡 Ваш мем!")
+    
+    # Отправляем в тот же чат
+    await bot.send_photo(
+        chat_id=message.chat.id,
+        photo=photo,
+        caption="🤡 Ваш мем!"
+    )
 
 async def check_subscription(user_id: int, bot: Bot) -> bool:
     member = await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
