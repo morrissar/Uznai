@@ -20,25 +20,25 @@ class DeleteStates(StatesGroup):
 
 user = Router()
 meme_router = Router()
-ALLOWED_CHATS = [-1003607675754]  # ТОЛЬКО ЭТОТ ЧАТ
+ALLOWED_CHATS = [-1003607675754] 
 MEMES_FOLDER = "memes"
 
-@meme_router.message(F.text.lower() == "мем")
+@user.message(F.text.lower() == "мем")
 async def send_meme(message: Message, bot: Bot):
-    if message.chat.id not in ALLOWED_CHATS:
+    if message.chat.id != -1003607675754:
         return
     
-    memes = [file for file in os.listdir(MEMES_FOLDER) if file.lower().endswith('.jpg')]
+    if not os.path.exists("memes"):
+        return
     
+    memes = [f for f in os.listdir("memes") if f.lower().endswith('.jpg')]
     if not memes:
-        await message.answer("❌ Нет мемов в папке!")
         return
-    
+        
     random_meme = random.choice(memes)
-    meme_path = os.path.join(MEMES_FOLDER, random_meme)
+    meme_path = os.path.join("memes", random_meme)
     photo = FSInputFile(meme_path)
     
-    # Отправляем в тот же чат
     await bot.send_photo(
         chat_id=message.chat.id,
         photo=photo,
@@ -150,3 +150,4 @@ async def process_any_post(message: Message, state: FSMContext, bot: Bot):
 async def on_group_message(message: Message, bot: Bot):
     if message.sender_chat and message.sender_chat.id == -1003550629921: 
         await bot.send_message(chat_id=-1003607675754,reply_to_message_id=message.message_id,text='📨 @UznaiZaUI_bot',parse_mode='HTML')
+
