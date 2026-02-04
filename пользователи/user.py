@@ -1,5 +1,6 @@
 import asyncio
 import random
+import os
 from datetime import datetime
 from aiogram.types import Message, FSInputFile
 from aiogram import Router, Bot
@@ -232,5 +233,6 @@ async def on_group_message(message: Message, bot: Bot):
             reply_to_message_id=message.message_id,
             text=text,
             parse_mode='HTML')
+
 
 
