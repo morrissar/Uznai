@@ -125,28 +125,35 @@ async def process_any_post(message: Message, state: FSMContext, bot: Bot):
     from app import post_user_map
     if message.text == 'Назад в меню':
         await state.clear()
-        await message.answer('👋 Привет! Мы - "Узнай за УИ"!',reply_markup=kb.main)
+        await message.answer('👋 Привет! Мы - "Узнай за УИ"!', reply_markup=kb.main)
         return
     user_id = message.from_user.id
     if message.text:
         new_text = message.text + "\n\n<a href='https://t.me/yznay138'>Узнай за УИ</a>"
-        post_msg = await bot.send_message(chat_id=-1003627692695, message_thread_id=232, text=new_text, parse_mode='HTML')
+        post_msg = await bot.send_message(chat_id=-1003627692695, message_thread_id=232, text=new_text, parse_mode='HTML', disable_web_page_preview=True)
+        post_user_map[post_msg.message_id] = user_id
+    elif message.photo and message.caption:
+        new_caption = message.caption + "\n\n<a href='https://t.me/yznay138'>Узнай за УИ</a>"
+        post_msg = await bot.send_photo(chat_id=-1003627692695, message_thread_id=232, photo=message.photo[-1].file_id, caption=new_caption, parse_mode='HTML')
         post_user_map[post_msg.message_id] = user_id
     elif message.photo:
-        caption = message.caption + "\n\n<a href='https://t.me/yznay138'>Узнай за УИ</a>" if message.caption else "<a href='https://t.me/yznay138'>Узнай за УИ</a>"
-        post_msg = await bot.send_photo(chat_id=-1003627692695, message_thread_id=232, photo=message.photo[-1].file_id, caption=caption, parse_mode='HTML')
-        post_user_map[post_msg.message_id] = user_id    
+        post_msg = await bot.send_photo(chat_id=-1003627692695, message_thread_id=232, photo=message.photo[-1].file_id, caption="<a href='https://t.me/yznay138'>Узнай за УИ</a>", parse_mode='HTML')
+        post_user_map[post_msg.message_id] = user_id
+    elif message.video and message.caption:
+        new_caption = message.caption + "\n\n<a href='https://t.me/yznay138'>Узнай за УИ</a>"
+        post_msg = await bot.send_video(chat_id=-1003627692695, message_thread_id=232, video=message.video.file_id, caption=new_caption, parse_mode='HTML')
+        post_user_map[post_msg.message_id] = user_id
     elif message.video:
-        caption = message.caption + "\n\n<a href='https://t.me/yznay138'>Узнай за УИ</a>" if message.caption else "<a href='https://t.me/yznay138'>Узнай за УИ</a>"
-        post_msg = await bot.send_video(chat_id=-1003627692695, message_thread_id=232, video=message.video.file_id, caption=caption, parse_mode='HTML')
+        post_msg = await bot.send_video(chat_id=-1003627692695, message_thread_id=232, video=message.video.file_id, caption="<a href='https://t.me/yznay138'>Узнай за УИ</a>", parse_mode='HTML')
         post_user_map[post_msg.message_id] = user_id
     else:
         post_msg = await bot.copy_message(chat_id=-1003627692695, from_chat_id=message.chat.id, message_id=message.message_id, message_thread_id=232)
         post_user_map[post_msg.message_id] = user_id
     await message.answer('✅ <b>Пост отправлен на модерацию!</b>', reply_markup=kb.main, parse_mode='HTML')
     await state.clear()
-
+    
 @user.message(F.chat.id == -1003607675754) 
 async def on_group_message(message: Message, bot: Bot):
     if message.sender_chat and message.sender_chat.id == -1003550629921: 
         await bot.send_message(chat_id=-1003607675754,reply_to_message_id=message.message_id,text='📨 @UznaiZaUI_bot',parse_mode='HTML')
+
