@@ -164,3 +164,14 @@ async def on_group_message(message: Message, bot: Bot):
     if message.sender_chat and message.sender_chat.id == -1003550629921: 
         text = '📨 Опубликовать/удалить пост или написать админам - @UznaiZaUI_bot'
         await bot.send_message(chat_id=-1003607675754,reply_to_message_id=message.message_id,text=text,parse_mode='HTML')
+
+async def send_rules():
+    await bot.send_message(chat_id=-1003607675754, text='Правила')
+
+async def schedule_send():
+    while True:
+        now = datetime.now()
+        if now.minute == 0:
+            await send_rules()
+            await asyncio.sleep(60)
+        await asyncio.sleep(1)
