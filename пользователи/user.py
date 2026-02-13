@@ -1,6 +1,6 @@
 import random
 import os
-import asyncio  # Добавлен импорт asyncio
+import asyncio 
 from datetime import datetime
 from aiogram.types import Message, FSInputFile
 from aiogram import Router, Bot
@@ -176,4 +176,5 @@ async def schedule_send(bot: Bot):
             await send_rules(bot)  
             await asyncio.sleep(60)
         await asyncio.sleep(1)
+
 
