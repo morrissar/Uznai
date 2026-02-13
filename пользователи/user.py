@@ -1,18 +1,36 @@
 import random
 import os
-import asyncio 
+import asyncio
+import json
 from datetime import datetime
-from aiogram.types import Message, FSInputFile
-from aiogram import Router, Bot
+from aiogram import Bot, Dispatcher, Router, F
+from aiogram.types import Message, FSInputFile, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.enums import ChatAction
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram import F
 import кнопки.keyboards as kb
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from helper import helper_router
 
 CHANNEL_ID = -1003550629921
+GROUP_ID = -1003607675754
+ADMIN_GROUP_ID = -1003627692695
+
+POST_MAP_FILE = 'post_user_map.json'
+DELETE_MAP_FILE = 'delete_user_map.json'
+
+def load_json_map(filename):
+    if os.path.exists(filename):
+        with open(filename, 'r') as f:
+            return json.load(f)
+    return {}
+
+def save_json_map(data, filename):
+    with open(filename, 'w') as f:
+        json.dump(data, f)
+
+post_user_map = load_json_map(POST_MAP_FILE)
+delete_user_map = load_json_map(DELETE_MAP_FILE)
 
 class PostStates(StatesGroup):
     waiting_for_post = State()
@@ -22,10 +40,13 @@ class DeleteStates(StatesGroup):
     waiting_for_anketa = State()
 
 user = Router()
+dp = Dispatcher()
+dp.include_router(user)
+dp.include_router(helper_router)
 
 @user.message(F.text.lower() == "мем")
 async def send_meme(message: Message, bot: Bot):
-    if message.chat.id != -1003607675754:
+    if message.chat.id != GROUP_ID:
         return
     if not os.path.exists("memes"):
         return
@@ -41,7 +62,7 @@ async def check_subscription(user_id: int, bot: Bot) -> bool:
     try:
         member = await bot.get_chat_member(chat_id=CHANNEL_ID, user_id=user_id)
         return member.status in ['member', 'administrator', 'creator']
-    except Exception:
+    except:
         return False
 
 @user.message(CommandStart())
@@ -113,8 +134,10 @@ async def process_anketa(message: Message, state: FSMContext, bot: Bot):
     user_id = message.from_user.id
     username = f'@{message.from_user.username}' if message.from_user.username else 'без username'
     full_name = message.from_user.full_name    
-    admin_text = (f'📨 <b>ЗАЯВКА НА УДАЛЕНИЕ</b>\n👤 От: {full_name}\n🔗 {username} | ID: <code>{user_id}</code>\n📅 {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n➖➖➖➖➖➖➖➖➖➖\n{message.text}\n')    
-    await bot.send_message(chat_id=-1003627692695,message_thread_id=237,text=admin_text,parse_mode='HTML')
+    admin_text = (f'📨 <b>ЗАЯВКА НА УДАЛЕНИЕ</b>\n👤 От: {full_name}\n🔗 {username} | ID: <code>{user_id}</code>\n📅 {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n➖➖➖➖➖➖➖➖➖➖\n{message.text}\n')
+    sent_msg = await bot.send_message(chat_id=ADMIN_GROUP_ID,message_thread_id=237,text=admin_text,parse_mode='HTML')
+    delete_user_map[str(sent_msg.message_id)] = str(user_id)
+    save_json_map(delete_user_map, DELETE_MAP_FILE)
     await message.answer('✅ <b>Заявка отправлена!</b>',reply_markup=kb.main,parse_mode='HTML')
     await state.clear()
 
@@ -125,7 +148,6 @@ async def back_to_menu(message: Message, state: FSMContext):
 
 @user.message(PostStates.waiting_for_post)
 async def process_any_post(message: Message, state: FSMContext, bot: Bot):
-    from app import post_user_map
     if message.text == 'Назад в меню':
         await state.clear()
         await message.answer('👋 Привет! Мы - "Узнай за УИ"!\nДля ознакомления с функционалом бота посмотрите на кнопки.',reply_markup=kb.main)
@@ -137,37 +159,38 @@ async def process_any_post(message: Message, state: FSMContext, bot: Bot):
     if message.text:
         quoted_text = f'<blockquote expandable>{message.text}</blockquote>'
         new_text = quoted_text + "\n\n<a href='https://t.me/yznay138'>Узнай за УИ</a>"
-        post_msg = await bot.send_message(chat_id=-1003627692695, message_thread_id=232, text=new_text, parse_mode='HTML', disable_web_page_preview=True)
-        post_user_map[post_msg.message_id] = user_id
+        post_msg = await bot.send_message(chat_id=ADMIN_GROUP_ID, message_thread_id=232, text=new_text, parse_mode='HTML', disable_web_page_preview=True)
+        post_user_map[str(post_msg.message_id)] = str(user_id)
     elif message.photo and message.caption:
         new_caption = message.caption + "\n\n<a href='https://t.me/yznay138'>Узнай за УИ</a>"
-        post_msg = await bot.send_photo(chat_id=-1003627692695, message_thread_id=232, photo=message.photo[-1].file_id, caption=new_caption, parse_mode='HTML')
-        post_user_map[post_msg.message_id] = user_id
+        post_msg = await bot.send_photo(chat_id=ADMIN_GROUP_ID, message_thread_id=232, photo=message.photo[-1].file_id, caption=new_caption, parse_mode='HTML')
+        post_user_map[str(post_msg.message_id)] = str(user_id)
     elif message.photo:
-        post_msg = await bot.send_photo(chat_id=-1003627692695, message_thread_id=232, photo=message.photo[-1].file_id, caption="<a href='https://t.me/yznay138'>Узнай за УИ</a>", parse_mode='HTML')
-        post_user_map[post_msg.message_id] = user_id    
+        post_msg = await bot.send_photo(chat_id=ADMIN_GROUP_ID, message_thread_id=232, photo=message.photo[-1].file_id, caption="<a href='https://t.me/yznay138'>Узнай за УИ</a>", parse_mode='HTML')
+        post_user_map[str(post_msg.message_id)] = str(user_id)
     elif message.video and message.caption:
         new_caption = message.caption + "\n\n<a href='https://t.me/yznay138'>Узнай за УИ</a>"
-        post_msg = await bot.send_video(chat_id=-1003627692695, message_thread_id=232, video=message.video.file_id, caption=new_caption, parse_mode='HTML')
-        post_user_map[post_msg.message_id] = user_id    
+        post_msg = await bot.send_video(chat_id=ADMIN_GROUP_ID, message_thread_id=232, video=message.video.file_id, caption=new_caption, parse_mode='HTML')
+        post_user_map[str(post_msg.message_id)] = str(user_id)
     elif message.video:
-        post_msg = await bot.send_video(chat_id=-1003627692695, message_thread_id=232, video=message.video.file_id, caption="<a href='https://t.me/yznay138'>Узнай за УИ</a>", parse_mode='HTML')
-        post_user_map[post_msg.message_id] = user_id
+        post_msg = await bot.send_video(chat_id=ADMIN_GROUP_ID, message_thread_id=232, video=message.video.file_id, caption="<a href='https://t.me/yznay138'>Узнай за УИ</a>", parse_mode='HTML')
+        post_user_map[str(post_msg.message_id)] = str(user_id)
     else:
-        post_msg = await bot.copy_message(chat_id=-1003627692695, from_chat_id=message.chat.id, message_id=message.message_id, message_thread_id=232)
-        post_user_map[post_msg.message_id] = user_id
-    await bot.send_message(chat_id=-1003627692695, message_thread_id=232, text=admin_info, parse_mode='HTML', reply_to_message_id=post_msg.message_id)
+        post_msg = await bot.copy_message(chat_id=ADMIN_GROUP_ID, from_chat_id=message.chat.id, message_id=message.message_id, message_thread_id=232)
+        post_user_map[str(post_msg.message_id)] = str(user_id)
+    save_json_map(post_user_map, POST_MAP_FILE)
+    await bot.send_message(chat_id=ADMIN_GROUP_ID, message_thread_id=232, text=admin_info, parse_mode='HTML', reply_to_message_id=post_msg.message_id)
     await message.answer('✅ <b>Пост отправлен на модерацию!</b>\nАдминистратор проверит его в ближайшее время.', reply_markup=kb.main, parse_mode='HTML')
     await state.clear()
 
-@user.message(F.chat.id == -1003607675754) 
+@user.message(F.chat.id == GROUP_ID) 
 async def on_group_message(message: Message, bot: Bot):
-    if message.sender_chat and message.sender_chat.id == -1003550629921: 
+    if message.sender_chat and message.sender_chat.id == CHANNEL_ID: 
         text = '📨 Опубликовать/удалить пост или написать админам - @UznaiZaUI_bot'
-        await bot.send_message(chat_id=-1003607675754,reply_to_message_id=message.message_id,text=text,parse_mode='HTML')
+        await bot.send_message(chat_id=GROUP_ID,reply_to_message_id=message.message_id,text=text,parse_mode='HTML')
 
 async def send_rules(bot: Bot):  
-    await bot.send_message(chat_id=-1003607675754, text='Правила')
+    await bot.send_message(chat_id=GROUP_ID, text='Правила')
 
 async def schedule_send(bot: Bot): 
     while True:
@@ -177,4 +200,9 @@ async def schedule_send(bot: Bot):
             await asyncio.sleep(60)
         await asyncio.sleep(1)
 
+async def main():
+    bot = Bot(token="YOUR_TOKEN")
+    await dp.start_polling(bot)
 
+if __name__ == "__main__":
+    asyncio.run(main())
