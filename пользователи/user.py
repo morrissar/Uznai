@@ -3,14 +3,13 @@ import os
 import asyncio
 import json
 from datetime import datetime
-from aiogram import Bot, Dispatcher, Router, F
+from aiogram import Bot, Router, F
 from aiogram.types import Message, FSInputFile, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.enums import ChatAction
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 import кнопки.keyboards as kb
-from helper import helper_router
 
 CHANNEL_ID = -1003550629921
 GROUP_ID = -1003607675754
@@ -40,9 +39,6 @@ class DeleteStates(StatesGroup):
     waiting_for_anketa = State()
 
 user = Router()
-dp = Dispatcher()
-dp.include_router(user)
-dp.include_router(helper_router)
 
 @user.message(F.text.lower() == "мем")
 async def send_meme(message: Message, bot: Bot):
@@ -199,10 +195,3 @@ async def schedule_send(bot: Bot):
             await send_rules(bot)  
             await asyncio.sleep(60)
         await asyncio.sleep(1)
-
-async def main():
-    bot = Bot(token="YOUR_TOKEN")
-    await dp.start_polling(bot)
-
-if __name__ == "__main__":
-    asyncio.run(main())
