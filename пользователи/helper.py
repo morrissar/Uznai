@@ -15,10 +15,6 @@ def load_json_map(filename):
             return json.load(f)
     return {}
 
-def save_json_map(data, filename):
-    with open(filename, 'w') as f:
-        json.dump(data, f)
-
 @helper_router.message(F.chat.id == -1003627692695, F.message_thread_id == 237, F.reply_to_message)
 async def helper_reply(message: Message, bot: Bot):
     replied_msg = message.reply_to_message
@@ -38,7 +34,7 @@ async def helper_reply(message: Message, bot: Bot):
         except Exception as e:
             await message.reply(f'❌ Ошибка отправки: {e}')
     else:
-        await message.reply('❌ Не удалось найти ID пользователя (возможно, данные утеряны)')
+        await message.reply('❌ Не удалось найти ID пользователя')
 
 @helper_router.message(F.chat.id == -1003627692695, F.message_thread_id == 232, F.reply_to_message)
 async def post_reply(message: Message, bot: Bot):
@@ -60,4 +56,4 @@ async def post_reply(message: Message, bot: Bot):
             except Exception as e:
                 await message.reply(f'❌ Ошибка отправки: {e}')
     else:
-        await message.reply('❌ Не найден автор поста (возможно, данные утеряны)')
+        await message.reply('❌ Не найден автор поста')
