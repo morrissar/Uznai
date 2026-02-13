@@ -7,8 +7,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-post_user_map = {}
-
 async def main():
     token = os.getenv('TOKEN')
     if not token:
@@ -16,10 +14,13 @@ async def main():
         sys.exit(1)
     
     bot = Bot(token=token)
-    dp = Dispatcher()  # ← ВОТ ТУТ СОЗДАЕМ dp
+    dp = Dispatcher()
 
     from пользователи.user import user
+    from пользователи.helper import helper_router
+    
     dp.include_router(user)
+    dp.include_router(helper_router)
     
     print("✅ Бот запущен...")
     
