@@ -31,10 +31,6 @@ async def helper_reply(message: Message, bot: Bot):
                 parse_mode='HTML'
             )
             await message.reply('✅ Ответ отправлен пользователю')
-        except Exception as e:
-            await message.reply(f'❌ Ошибка отправки: {e}')
-    else:
-        await message.reply('❌ Не удалось найти ID пользователя')
 
 @helper_router.message(F.chat.id == -1003710242278, F.message_thread_id == 2, F.reply_to_message)
 async def post_reply(message: Message, bot: Bot):
@@ -53,7 +49,3 @@ async def post_reply(message: Message, bot: Bot):
                     parse_mode='HTML'
                 )
                 await message.reply('✅ Ответ отправлен автору поста')
-            except Exception as e:
-                await message.reply(f'❌ Ошибка отправки: {e}')
-    else:
-        await message.reply('❌ Не найден автор поста')
