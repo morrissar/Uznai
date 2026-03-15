@@ -24,7 +24,6 @@ async def helper_reply(message: Message, bot: Bot):
     replied_msg_id = str(replied_msg.message_id)
     if replied_msg_id in delete_map:
         user_id = delete_map[replied_msg_id]
-        try:
             await bot.send_message(
                 chat_id=int(user_id),
                 text=f'📨 <b>Ответ от администратора:</b>\n\n{message.text}',
@@ -42,7 +41,6 @@ async def post_reply(message: Message, bot: Bot):
     if replied_msg_id in post_map:
         user_id = post_map[replied_msg_id]
         if message.text:
-            try:
                 await bot.send_message(
                     chat_id=int(user_id),
                     text=f'📨 <b>Ответ от администратора на ваш пост:</b>\n\n{message.text}',
