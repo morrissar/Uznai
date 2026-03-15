@@ -15,7 +15,7 @@ def load_json_map(filename):
             return json.load(f)
     return {}
 
-@helper_router.message(F.chat.id == -1003627692695, F.message_thread_id == 237, F.reply_to_message)
+@helper_router.message(F.chat.id == -1003710242278, F.message_thread_id == 37, F.reply_to_message)
 async def helper_reply(message: Message, bot: Bot):
     replied_msg = message.reply_to_message
     if not replied_msg:
@@ -36,7 +36,7 @@ async def helper_reply(message: Message, bot: Bot):
     else:
         await message.reply('❌ Не удалось найти ID пользователя')
 
-@helper_router.message(F.chat.id == -1003627692695, F.message_thread_id == 232, F.reply_to_message)
+@helper_router.message(F.chat.id == -1003710242278, F.message_thread_id == 2, F.reply_to_message)
 async def post_reply(message: Message, bot: Bot):
     if not message.reply_to_message:
         return
