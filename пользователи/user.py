@@ -132,7 +132,7 @@ async def process_anketa(message: Message, state: FSMContext, bot: Bot):
     username = f'@{message.from_user.username}' if message.from_user.username else 'без username'
     full_name = message.from_user.full_name    
     admin_text = (f'📨 <b>ЗАЯВКА НА УДАЛЕНИЕ</b>\n👤 От: {full_name}\n🔗 {username} | ID: <code>{user_id}</code>\n📅 {datetime.now().strftime("%d.%m.%Y %H:%M:%S")}\n➖➖➖➖➖➖➖➖➖➖\n{message.text}\n')
-    sent_msg = await bot.send_message(chat_id=ADMIN_GROUP_ID,message_thread_id=32,text=admin_text,parse_mode='HTML')
+    sent_msg = await bot.send_message(chat_id=ADMIN_GROUP_ID,message_thread_id=37,text=admin_text,parse_mode='HTML')
     delete_user_map[str(sent_msg.message_id)] = str(user_id)
     save_json_map(delete_user_map, DELETE_MAP_FILE)
     await message.answer('✅ <b>Заявка отправлена!</b>',reply_markup=kb.main,parse_mode='HTML')
