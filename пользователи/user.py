@@ -110,7 +110,7 @@ async def delete_post(message: Message, state: FSMContext, bot: Bot):
 
 @user.message(DeleteStates.waiting_for_choice, F.text == 'Платное удаление')
 async def platnoe_udal(message: Message, state: FSMContext, bot: Bot):
-    await message.answer('💎 <b>Платное удаление - 15 звезд</b>\n\nДля удаления поста оплатите 15 звезд\nВладелец: @YznaizaYI',parse_mode='HTML')
+    await message.answer('💎 <b>Платное удаление - 15 звезд</b>\n\nДля удаления поста отправьте подарок стоимостью 15 звезд.\nВладелец: @YznaizaYI',parse_mode='HTML')
     await state.clear()
     await message.answer('🔙 Возвращаемся в главное меню...', reply_markup=kb.main)
 
