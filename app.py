@@ -4,6 +4,7 @@ import os
 import sys
 from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
+from database import db
 
 load_dotenv()
 
@@ -12,22 +13,18 @@ async def main():
     if not token:
         print("❌ TOKEN не найден в .env файле")
         sys.exit(1)
-    
     bot = Bot(token=token)
     dp = Dispatcher()
-
     from пользователи.user import user
     from пользователи.helper import helper_router
-    
     dp.include_router(user)
     dp.include_router(helper_router)
-    
     print("✅ Бот запущен...")
-    
     try:
         await dp.start_polling(bot)
     finally:
         await bot.session.close()
+        db.close()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
