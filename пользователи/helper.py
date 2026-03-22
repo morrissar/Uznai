@@ -70,6 +70,6 @@ async def send_to_all(message: Message, bot: Bot):
             failed_count += 1
         
         if sent_count % 20 == 0:
-            await status_msg.edit_text(f'Рассылка...\n Отправлено: {sent_count}\n Ошибок: {failed_count}\n📊 Осталось: {len(users) - sent_count - failed_count}')
+            await status_msg.edit_text(f'Рассылка...\n Отправлено: {sent_count}\n Ошибок: {failed_count}\n Осталось: {len(users) - sent_count - failed_count}')
     
-    await status_msg.edit_text(f'Рассылка завершена!\n\n Успешно: {sent_count}\n Не отправлено: {failed_count}\n👥 Всего: {len(users)}')
+    await status_msg.edit_text(f'Рассылка завершена!\n\n Успешно: {sent_count}\n Не отправлено: {failed_count}\n Всего: {len(users)}')
