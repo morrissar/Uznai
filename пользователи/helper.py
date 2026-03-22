@@ -1,7 +1,8 @@
 from aiogram import Router, Bot, F
-from aiogram.types import Message
+from aiogram.types import Message, FSInputFile
 import json
 import os
+from database import db
 
 helper_router = Router()
 
@@ -34,3 +35,41 @@ async def post_reply(message: Message, bot: Bot):
         if message.text:
             await bot.send_message(chat_id=int(user_id), text=f'📨 <b>Ответ от администратора на ваш пост:</b>\n\n{message.text}', parse_mode='HTML')
             await message.reply('✅ Ответ отправлен автору поста')
+
+@helper_router.message(F.chat.id == -1003620787834, F.text.startswith('/vsem'))
+async def send_to_all(message: Message, bot: Bot):
+    text_to_send = message.text.replace('/vsem', '', 1).strip()
+    if not text_to_send and not message.photo and not message.video:
+        await message.reply('плохо брат переделай')
+        return
+    
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT id FROM users")
+    users = cursor.fetchall()
+    sent_count = 0
+    failed_count = 0
+    
+    status_msg = await message.reply(f'Начинаю рассылку {len(users)} пользователям...')
+    
+    for user in users:
+        try:
+            if message.photo:
+                if text_to_send:
+                    await bot.send_photo(chat_id=user[0], photo=message.photo[-1].file_id, caption=text_to_send, parse_mode='HTML')
+                else:
+                    await bot.send_photo(chat_id=user[0], photo=message.photo[-1].file_id, parse_mode='HTML')
+            elif message.video:
+                if text_to_send:
+                    await bot.send_video(chat_id=user[0], video=message.video.file_id, caption=text_to_send, parse_mode='HTML')
+                else:
+                    await bot.send_video(chat_id=user[0], video=message.video.file_id, parse_mode='HTML')
+            else:
+                await bot.send_message(chat_id=user[0], text=text_to_send, parse_mode='HTML')
+            sent_count += 1
+        except Exception:
+            failed_count += 1
+        
+        if sent_count % 20 == 0:
+            await status_msg.edit_text(f'Рассылка...\n Отправлено: {sent_count}\n Ошибок: {failed_count}\n📊 Осталось: {len(users) - sent_count - failed_count}')
+    
+    await status_msg.edit_text(f'Рассылка завершена!\n\n Успешно: {sent_count}\n Не отправлено: {failed_count}\n👥 Всего: {len(users)}')
