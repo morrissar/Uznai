@@ -4,14 +4,29 @@ from datetime import datetime
 
 class Database:
     def __init__(self, db_name='users.db'):
+        # Определяем папку для хранения данных ВНЕ папки с проектом
+        # Bothost.ru, скорее всего, использует структуру с домашней директорией пользователя.
+        # Самый безопасный путь — это папка на уровень выше корня вашего бота.
+        # Например, если бот лежит в /home/your_login/bot/, то БД будет в /home/your_login/bot_data/
+        
+        # Получаем абсолютный путь к папке, где находится текущий скрипт (database.py)
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.dirname(current_dir) 
-        data_dir = os.path.join(project_root, 'bot_data') 
+        # Поднимаемся на один уровень вверх от папки с ботом и создаем папку для данных
+        project_root = os.path.dirname(current_dir)  # Это папка, где лежит ваша папка с ботом
+        data_dir = os.path.join(project_root, 'bot_data')  # Создаем папку bot_data рядом
+        
+        # Создаем папку, если её нет
         os.makedirs(data_dir, exist_ok=True)
+        
+        # Формируем полный путь к файлу базы данных
         db_path = os.path.join(data_dir, db_name)
+        
+        print(f"📁 Путь к БД: {db_path}")  # Полезно для отладки
+        
         self.conn = sqlite3.connect(db_path)
         self.create_tables()
         self.db_path = db_path
+    
         
     def create_tables(self):
         cursor = self.conn.cursor()
