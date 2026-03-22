@@ -1,11 +1,18 @@
 import sqlite3
+import os
 from datetime import datetime
 
 class Database:
     def __init__(self, db_name='users.db'):
-        self.conn = sqlite3.connect(db_name)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(current_dir) 
+        data_dir = os.path.join(project_root, 'bot_data') 
+        os.makedirs(data_dir, exist_ok=True)
+        db_path = os.path.join(data_dir, db_name)
+        self.conn = sqlite3.connect(db_path)
         self.create_tables()
-
+        self.db_path = db_path
+        
     def create_tables(self):
         cursor = self.conn.cursor()
         cursor.execute('''
