@@ -9,11 +9,16 @@ from database import db
 
 load_dotenv()
 
+GROUP_ID = -1003607675754
+
 async def remove_keyboard_in_group(bot: Bot):
-    GROUP_ID = -1003607675754
-    msg = await bot.send_message(chat_id=GROUP_ID, text='.', reply_markup=ReplyKeyboardRemove())
-    await asyncio.sleep(0.5)
-    await bot.delete_message(chat_id=GROUP_ID, message_id=msg.message_id)
+    try:
+        msg = await bot.send_message(chat_id=GROUP_ID, text='.', reply_markup=ReplyKeyboardRemove())
+        await asyncio.sleep(0.5)
+        await bot.delete_message(chat_id=GROUP_ID, message_id=msg.message_id)
+        print("✅ Клавиатура удалена из группы")
+    except Exception as e:
+        print(f"⚠️ Не удалось удалить клавиатуру: {e}")
 
 async def main():
     token = os.getenv('TOKEN')
