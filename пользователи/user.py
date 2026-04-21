@@ -1,9 +1,10 @@
 import random
 import os
 import json
+import asyncio
 from datetime import datetime
 from aiogram import Bot, Router, F
-from aiogram.types import Message, FSInputFile
+from aiogram.types import Message, FSInputFile, ReplyKeyboardRemove
 from aiogram.enums import ChatAction
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
@@ -221,3 +222,11 @@ async def on_group_message(message: Message, bot: Bot):
     if message.sender_chat and message.sender_chat.id == CHANNEL_ID:
         text = '📨 Опубликовать/удалить пост или написать админам - @UznaiZaUI_bot'
         await bot.send_message(chat_id=GROUP_ID, reply_to_message_id=message.message_id, text=text, parse_mode='HTML')
+
+async def remove_keyboard_in_group(bot: Bot):
+    try:
+        remove_msg = await bot.send_message(chat_id=GROUP_ID, text='⌨️ Клавиатура удалена', reply_markup=ReplyKeyboardRemove())
+        await asyncio.sleep(1)
+        await bot.delete_message(chat_id=GROUP_ID, message_id=remove_msg.message_id)
+    except Exception as e:
+        print(f"Не удалось удалить клавиатуру в группе: {e}")
