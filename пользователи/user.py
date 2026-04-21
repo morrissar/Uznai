@@ -74,6 +74,8 @@ async def send_meme(message: Message, bot: Bot):
 
 @user.message(CommandStart())
 async def start(message: Message, bot: Bot):
+    if message.chat.id == GROUP_ID:
+        return
     record_user(message)
     if not await ensure_subscription(message, bot):
         return
@@ -82,6 +84,8 @@ async def start(message: Message, bot: Bot):
 
 @user.message(F.text == 'Контакты руководства')
 async def contacts(message: Message, bot: Bot):
+    if message.chat.id == GROUP_ID:
+        return
     record_user(message)
     if not await ensure_subscription(message, bot):
         return
@@ -90,6 +94,8 @@ async def contacts(message: Message, bot: Bot):
 
 @user.message(F.text == 'Пользовательское соглашение')
 async def soglash(message: Message, bot: Bot):
+    if message.chat.id == GROUP_ID:
+        return
     record_user(message)
     if not await ensure_subscription(message, bot):
         return
@@ -98,6 +104,8 @@ async def soglash(message: Message, bot: Bot):
 
 @user.message(F.text == 'Предложить пост')
 async def make_post(message: Message, state: FSMContext, bot: Bot):
+    if message.chat.id == GROUP_ID:
+        return
     record_user(message)
     if not await ensure_subscription(message, bot):
         return
@@ -107,6 +115,8 @@ async def make_post(message: Message, state: FSMContext, bot: Bot):
 
 @user.message(F.text == 'Удалить пост')
 async def delete_post(message: Message, state: FSMContext, bot: Bot):
+    if message.chat.id == GROUP_ID:
+        return
     record_user(message)
     if not await ensure_subscription(message, bot):
         return
@@ -116,18 +126,24 @@ async def delete_post(message: Message, state: FSMContext, bot: Bot):
 
 @user.message(DeleteStates.waiting_for_choice, F.text == 'Платное удаление')
 async def platnoe_udal(message: Message, state: FSMContext, bot: Bot):
+    if message.chat.id == GROUP_ID:
+        return
     await message.answer('💎 <b>Платное удаление - 15 звезд</b>\n\nДля удаления поста отправьте подарок стоимостью 15 звезд.\nВладелец: @YznaizaYI', parse_mode='HTML')
     await state.clear()
     await message.answer('🔙 Возвращаемся в главное меню...', reply_markup=kb.main)
 
 @user.message(DeleteStates.waiting_for_choice, F.text == 'Бесплатное удаление')
 async def besplat_udal(message: Message, state: FSMContext, bot: Bot):
+    if message.chat.id == GROUP_ID:
+        return
     anketa = ('📋 <b>Заполните следующую анкету:</b>\n\n1. Ваше ФИ и возраст\n2. Причина удаления (3+ аргумента)\n3. Ваш юз в телеграмм\n4. Ссылка на пост\n5. Дата подачи запроса\n6. Точное время подачи запроса\n\nОтправьте всю информацию одним сообщением.')
     await message.answer(anketa, reply_markup=kb.back_keyboard, parse_mode='HTML')
     await state.set_state(DeleteStates.waiting_for_anketa)
 
 @user.message(DeleteStates.waiting_for_anketa)
 async def process_anketa(message: Message, state: FSMContext, bot: Bot):
+    if message.chat.id == GROUP_ID:
+        return
     if message.text == 'Назад в меню':
         await state.clear()
         await message.answer('❌ Заполнение анкеты отменено.', reply_markup=kb.main)
@@ -145,11 +161,15 @@ async def process_anketa(message: Message, state: FSMContext, bot: Bot):
 
 @user.message(F.text == 'Назад в меню')
 async def back_to_menu(message: Message, state: FSMContext):
+    if message.chat.id == GROUP_ID:
+        return
     await state.clear()
     await message.answer('👋 Привет! Мы - "Узнай за УИ"!\nДля ознакомления с функционалом бота посмотрите на кнопки.', reply_markup=kb.main)
 
 @user.message(PostStates.waiting_for_post)
 async def process_any_post(message: Message, state: FSMContext, bot: Bot):
+    if message.chat.id == GROUP_ID:
+        return
     if message.text == 'Назад в меню':
         await state.clear()
         await message.answer('👋 Привет! Мы - "Узнай за УИ"!\nДля ознакомления с функционалом бота посмотрите на кнопки.', reply_markup=kb.main)
