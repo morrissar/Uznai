@@ -44,7 +44,7 @@ async def ban(message: Message, bot: Bot):
         await message.reply(
             'плохо брат переделай'
             '\n'
-            'пиши так: <code>/ban ID ВРЕМЯ ПРИЧИНА</code>')
+            'пиши так: /ban ID ВРЕМЯ ПРИЧИНА')
         return
     user_id_str, time_ban, cause = args[0], args[1], args[2]
     if not user_id_str.isdigit():
