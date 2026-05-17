@@ -65,11 +65,15 @@ class BanCheckMiddleware(BaseMiddleware):
             
             if ban_record:
                 exact_unban_time, cause = ban_record[0], ban_record[1]
-                try:
-                    unban_dt = datetime.strptime(exact_unban_time, "%Y-%m-%d %H:%M:%S")
-                    readable_time = unban_dt.strftime("%d.%m.%Y %H:%M")
-                except Exception:
-                    readable_time = exact_unban_time
+                
+                if exact_unban_time == "9999-12-31 23:59:59":
+                    readable_time = "Навсегда (Перманентно)"
+                else:
+                    try:
+                        unban_dt = datetime.strptime(exact_unban_time, "%Y-%m-%d %H:%M:%S")
+                        readable_time = unban_dt.strftime("%d.%m.%Y %H:%M")
+                    except Exception:
+                        readable_time = exact_unban_time
 
                 await event.answer(
                     f'❌ <b>Доступ заблокирован</b>\n\nВы были забанены администратором.\n'
@@ -132,7 +136,7 @@ async def contacts(message: Message, bot: Bot):
     if not await ensure_subscription(message, bot):
         return
     await message.bot.send_chat_action(chat_id=message.from_user.id, action=ChatAction.TYPING)
-    await message.answer('<b>📞 Контакты руководства</b>\n\nДля оперативного решения вопросов обратитесь к нужному специалисту:\n\n👑 <b>Владелец канала</b>\n• Вопросы публикаций и модерации\n• Реклама и сотрудничество\n• Общие вопросы по канале\n➜ @YznaizaYI\n\n⚙️ <b>Технический администратор</b>\n• Работа бота и технические сбои\n• Вопросы по Пользовательскому соглашению\n• Предложения по доработке функционала\n➜ @morisar_official', parse_mode='HTML')
+    await message.answer('<b>📞 Контакты руководства</b>\n\nДля оперативного решения вопросов обратитесь к нужному специалисту:\n\n👑 <b>Владелец канала</b>\n• Вопросы публикаций и модерации\n• Реклама и сотрудничество\n• Общие вопросы по каналу\n➜ @YznaizaYI\n\n⚙️ <b>Технический администратор</b>\n• Работа бота и технические сбои\n• Вопросы по Пользовательскому соглашению\n• Предложения по доработке функционала\n➜ @morisar_official', parse_mode='HTML')
 
 @user.message(F.text == 'Пользовательское соглашение')
 async def soglash(message: Message, bot: Bot):
