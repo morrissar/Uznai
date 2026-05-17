@@ -43,6 +43,7 @@ async def ban(message: Message, bot: Bot):
     if len(args) < 2:
         await message.reply(
             'плохо брат переделай'
+            '\n'
             'пиши так: <code>/ban ID ВРЕМЯ ПРИЧИНА</code>')
         return
     user_id_str, time_ban, cause = args[0], args[1], args[2]
