@@ -26,10 +26,17 @@ class Database:
                 delete_requests_count INTEGER DEFAULT 0
             )
         ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS banned (
+                id INTEGER PRIMARY KEY, 
+                date_ban DATETIME,
+                time_ban TEXT,
+                cause TEXT
+            )
+        ''')
         self.conn.commit()
         cursor.execute("SELECT COUNT(*) FROM users")
         count = cursor.fetchone()[0]
-        print(f"📊 В БД уже {count} пользователей")
     
     def add_or_update_user(self, user_id, username, full_name):
         cursor = self.conn.cursor()
@@ -58,6 +65,24 @@ class Database:
         cursor = self.conn.cursor()
         cursor.execute('SELECT * FROM users ORDER BY last_used DESC')
         return cursor.fetchall()
+        
+    def ban_user(self, user_id, time_ban, cause):
+        cursor = self.conn.cursor()
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        cursor.execute('INSERT OR REPLACE INTO banned (id, date_ban, time_ban, cause) VALUES (?, ?, ?, ?)',
+                       (user_id, now, time_ban, cause))
+        self.conn.commit()
+
+    def is_banned(self, user_id):
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT 1 FROM banned WHERE id = ?', (user_id,))
+        result = cursor.fetchone()
+        return result is not None
+
+    def unban_user(self, user_id):
+        cursor = self.conn.cursor()
+        cursor.execute('DELETE FROM banned WHERE id = ?', (user_id,))
+        self.conn.commit()
     
     def close(self):
         self.conn.close()
