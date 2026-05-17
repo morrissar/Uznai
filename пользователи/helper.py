@@ -42,7 +42,7 @@ async def send_to_all(message: Message, bot: Bot):
     if not text_to_send and not message.photo and not message.video:
         await message.reply('плохо брат переделай')
         return
-    
+
     cursor = db.conn.cursor()
     cursor.execute("SELECT id FROM users")
     users = cursor.fetchall()
@@ -52,24 +52,32 @@ async def send_to_all(message: Message, bot: Bot):
     status_msg = await message.reply(f'Начинаю рассылку {len(users)} пользователям...')
     
     for user in users:
+        user_id = user[0]
         try:
             if message.photo:
                 if text_to_send:
-                    await bot.send_photo(chat_id=user[0], photo=message.photo[-1].file_id, caption=text_to_send, parse_mode='HTML')
+                    await bot.send_photo(chat_id=user_id, photo=message.photo[-1].file_id, caption=text_to_send, parse_mode='HTML')
                 else:
-                    await bot.send_photo(chat_id=user[0], photo=message.photo[-1].file_id, parse_mode='HTML')
+                    await bot.send_photo(chat_id=user_id, photo=message.photo[-1].file_id, parse_mode='HTML')
             elif message.video:
                 if text_to_send:
-                    await bot.send_video(chat_id=user[0], video=message.video.file_id, caption=text_to_send, parse_mode='HTML')
+                    await bot.send_video(chat_id=user_id, video=message.video.file_id, caption=text_to_send, parse_mode='HTML')
                 else:
-                    await bot.send_video(chat_id=user[0], video=message.video.file_id, parse_mode='HTML')
+                    await bot.send_video(chat_id=user_id, video=message.video.file_id, parse_mode='HTML')
             else:
-                await bot.send_message(chat_id=user[0], text=text_to_send, parse_mode='HTML')
+                await bot.send_message(chat_id=user_id, text=text_to_send, parse_mode='HTML')
+            
             sent_count += 1
+            
         except Exception:
             failed_count += 1
         
-        if sent_count % 20 == 0:
-            await status_msg.edit_text(f'Рассылка...\n Отправлено: {sent_count}\n Ошибок: {failed_count}\n Осталось: {len(users) - sent_count - failed_count}')
-    
+        await asyncio.sleep(0.04) 
+        
+        if sent_count % 50 == 0:
+            try:
+                await status_msg.edit_text(f'Рассылка...\n Отправлено: {sent_count}\n Ошибок: {failed_count}\n Осталось: {len(users) - sent_count - failed_count}')
+            except Exception:
+                pass
+
     await status_msg.edit_text(f'Рассылка завершена!\n\n Успешно: {sent_count}\n Не отправлено: {failed_count}\n Всего: {len(users)}')
