@@ -9,6 +9,9 @@ from aiogram.enums import ChatAction
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.middlewares.base import BaseMiddleware
+from typing import Callable, Dict, Any, Awaitable
+
 import кнопки.keyboards as kb
 from database import db
 
@@ -41,6 +44,44 @@ class DeleteStates(StatesGroup):
     waiting_for_anketa = State()
 
 user = Router()
+
+class BanCheckMiddleware(BaseMiddleware):
+    async def __call__(
+        self,
+        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
+        event: Message,
+        data: Dict[str, Any]
+    ) -> Any:
+        if event.text in ['Предложить пост', 'Удалить пост']:
+            user_id = event.from_user.id
+            cursor = db.conn.cursor()
+            current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            cursor.execute(
+                "SELECT time_ban, cause FROM banned WHERE user_id = ? AND time_ban > ?", 
+                (user_id, current_time_str)
+            )
+            ban_record = cursor.fetchone()
+            
+            if ban_record:
+                exact_unban_time, cause = ban_record[0], ban_record[1]
+                try:
+                    unban_dt = datetime.strptime(exact_unban_time, "%Y-%m-%d %H:%M:%S")
+                    readable_time = unban_dt.strftime("%d.%m.%Y %H:%M")
+                except Exception:
+                    readable_time = exact_unban_time
+
+                await event.answer(
+                    f'❌ <b>Доступ заблокирован</b>\n\nВы были забанены администратором.\n'
+                    f'📅 Срок действия до: <code>{readable_time}</code>\n'
+                    f'💬 Причина: <i>{cause}</i>', 
+                    parse_mode='HTML'
+                )
+                return
+                
+        return await handler(event, data)
+
+user.message.middleware(BanCheckMiddleware())
 
 async def check_subscription(user_id: int, bot: Bot) -> bool:
     try:
@@ -91,7 +132,7 @@ async def contacts(message: Message, bot: Bot):
     if not await ensure_subscription(message, bot):
         return
     await message.bot.send_chat_action(chat_id=message.from_user.id, action=ChatAction.TYPING)
-    await message.answer('<b>📞 Контакты руководства</b>\n\nДля оперативного решения вопросов обратитесь к нужному специалисту:\n\n👑 <b>Владелец канала</b>\n• Вопросы публикаций и модерации\n• Реклама и сотрудничество\n• Общие вопросы по каналу\n➜ @YznaizaYI\n\n⚙️ <b>Технический администратор</b>\n• Работа бота и технические сбои\n• Вопросы по Пользовательскому соглашению\n• Предложения по доработке функционала\n➜ @morisar_official', parse_mode='HTML')
+    await message.answer('<b>📞 Контакты руководства</b>\n\nДля оперативного решения вопросов обратитесь к нужному специалисту:\n\n👑 <b>Владелец канала</b>\n• Вопросы публикаций и модерации\n• Реклама и сотрудничество\n• Общие вопросы по канале\n➜ @YznaizaYI\n\n⚙️ <b>Технический администратор</b>\n• Работа бота и технические сбои\n• Вопросы по Пользовательскому соглашению\n• Предложения по доработке функционала\n➜ @morisar_official', parse_mode='HTML')
 
 @user.message(F.text == 'Пользовательское соглашение')
 async def soglash(message: Message, bot: Bot):
