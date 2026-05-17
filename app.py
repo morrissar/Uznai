@@ -2,6 +2,8 @@ import logging
 import asyncio
 import os
 import sys
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from helper import check_auto_unban
 from aiogram import Bot, Dispatcher
 from aiogram.types import ReplyKeyboardRemove
 from dotenv import load_dotenv
