@@ -9,10 +9,6 @@ class Database:
         os.makedirs(data_dir, exist_ok=True)
         
         db_path = os.path.join(data_dir, db_name)
-        
-        print(f"📁 Папка данных: {data_dir}")
-        print(f"📁 Путь к БД: {db_path}")
-        
         self.conn = sqlite3.connect(db_path)
         self.create_tables()
         self.db_path = db_path
