@@ -2,14 +2,11 @@ import os
 import json
 import asyncio
 from datetime import datetime, timedelta
-
 from aiogram import Router, Bot, F
 from aiogram.types import Message, FSInputFile
-
 from database import db
 
 helper_router = Router()
-
 POST_MAP_FILE = 'post_user_map.json'
 DELETE_MAP_FILE = 'delete_user_map.json'
 
@@ -28,15 +25,13 @@ async def check_auto_unban(bot: Bot):
     for row in expired_bans:
         user_id = row[0]
         db.unban_user(user_id=user_id)
-            
         try:
             await bot.send_message(
                 chat_id=user_id, 
                 text='❗ <b>Срок вашей блокировки истёк.</b>\nВы снова можете использовать бота. Больше не нарушайте правила! ❤',
                 parse_mode='HTML')
         except Exception:
-            pass 
-
+            pass
 
 @helper_router.message(F.chat.id == -1003710242278, F.message_thread_id == 37, F.reply_to_message)
 async def helper_reply(message: Message, bot: Bot):
@@ -56,9 +51,8 @@ async def post_reply(message: Message, bot: Bot):
     if replied_msg_id in post_map:
         user_id = post_map[replied_msg_id]
         if message.text:
-            await bot.send_message(chat_id=int(user_id), text=f'📨 <b>Ответ от администратора на ваш пост:</b>\n\n{message.text}', parse_mode='HTML')
+            await bot.send_message(chat_id=int(user_id), text=f'📨 <b>Ответ от администратора на ваш post:</b>\n\n{message.text}', parse_mode='HTML')
             await message.reply('✅ Ответ отправлен автору поста')
-
 
 @helper_router.message(F.chat.id == -1003620787834, F.text.startswith('/ban'))
 async def ban(message: Message, bot: Bot):
@@ -71,34 +65,43 @@ async def ban(message: Message, bot: Bot):
         
     user_id_str, time_ban_str, cause = args[0], args[1], args[2]
     
-    if not user_id_str.isdigit() or not time_ban_str.isdigit():
-        await message.reply('але айди и время должны быть цифрами')
+    if not user_id_str.isdigit():
+        await message.reply('але айди должен быть цифрами')
         return
         
     user_id = int(user_id_str)
-    hours = int(time_ban_str)
+    is_perm = time_ban_str.lower() in ['perm', 'пермач']
+    
+    if not is_perm and not time_ban_str.isdigit():
+        await message.reply('время должно быть числом или словом perm/пермач')
+        return
 
-    unban_datetime = datetime.now() + timedelta(hours=hours)
-    exact_unban_time = unban_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    if is_perm:
+        exact_unban_time = "9999-12-31 23:59:59"
+        text_time = "навсегда"
+    else:
+        hours = int(time_ban_str)
+        unban_datetime = datetime.now() + timedelta(hours=hours)
+        exact_unban_time = unban_datetime.strftime("%Y-%m-%d %H:%M:%S")
+        text_time = f"на {hours}ч"
     
     db.ban_user(user_id=user_id, time_ban=exact_unban_time, cause=cause)
-
+    
     try: 
         await bot.send_message(
             chat_id=user_id, 
-            text=f'❗❗❗ Вы заблокированы в боте администратором на <b>{hours}ч</b> по причине: <b>{cause}</b>. ❗❗❗',
+            text=f'❗❗❗ Вы заблокированы в боте администратором <b>{text_time}</b> по причине: <b>{cause}</b>. ❗❗❗',
             parse_mode='HTML'
         )
     except Exception:
         pass
-
+        
     cursor = db.conn.cursor()
     cursor.execute("SELECT username FROM users WHERE id = ?", (user_id,))
     result = cursor.fetchone()
     user_name = result[0] if result else f'ID: {user_id}'
     
-    await message.reply(f'Пользователь {user_name} успешно заблокирован на {hours}ч по причине {cause}.')
-
+    await message.reply(f'Пользователь {user_name} успешно заблокирован {text_time} по причине {cause}.')
 
 @helper_router.message(F.chat.id == -1003620787834, F.text.startswith('/unban'))
 async def unban(message: Message, bot: Bot):
