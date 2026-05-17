@@ -36,15 +36,39 @@ async def post_reply(message: Message, bot: Bot):
             await bot.send_message(chat_id=int(user_id), text=f'📨 <b>Ответ от администратора на ваш пост:</b>\n\n{message.text}', parse_mode='HTML')
             await message.reply('✅ Ответ отправлен автору поста')
 
+@helper_router.message(F.chat.id == -1003620787834, F.text.startswith('/unban'))
+async def unban(message: Message, bot: Bot):
+    user_id_str = message.text.replace('/unban', '', 1).strip()
+    if not user_id_str:
+        await message.reply('плохо брат переделай\nпиши так: /unban ID')
+        return
+        
+    if not user_id_str.isdigit():
+        await message.reply('але айди пиши')
+        return
+    user_id = int(user_id_str)
+    db.unban_user(user_id=user_id)
+    cursor = db.conn.cursor()
+    cursor.execute("SELECT username FROM users WHERE id = ?", (user_id,))
+    result = cursor.fetchone()
+    
+    if result:
+        user_name = result[0]
+    else: 
+        user_name = f'ID: {user_id}'
+    await message.reply(f'Пользователь {user_name} успешно разбанен.')
+    
+    try: 
+        await bot.send_message(chat_id=user_id, text=f'❗Вы были разблокированы администратором. Больше не нарушайте наши правила ❤')
+    except Exception:
+        pass
+
 @helper_router.message(F.chat.id == -1003620787834, F.text.startswith('/ban'))
 async def ban(message: Message, bot: Bot):
     command_args = message.text.replace('/ban', '', 1).strip()
     args = command_args.split(maxsplit=2)
     if len(args) < 2:
-        await message.reply(
-            'плохо брат переделай'
-            '\n'
-            'пиши так: /ban ID ВРЕМЯ ПРИЧИНА')
+        await message.reply('плохо брат переделай\nпиши так: /ban ID ВРЕМЯ ПРИЧИНА')
         return
     user_id_str, time_ban, cause = args[0], args[1], args[2]
     if not user_id_str.isdigit():
@@ -52,6 +76,12 @@ async def ban(message: Message, bot: Bot):
         return
     user_id = int(user_id_str)
     db.ban_user(user_id=user_id, time_ban=time_ban, cause=cause)
+    
+    try: 
+        await bot.send_message(chat_id=user_id, text=f'❗❗❗Вы заблокированы в боте администратором на {time_ban}ч по причине {cause}.❗❗❗')
+    except Exception:
+        pass
+        
     cursor = db.conn.cursor()
     cursor.execute("SELECT username FROM users WHERE id = ?", (user_id,))
     result = cursor.fetchone()
