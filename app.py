@@ -30,6 +30,10 @@ async def main():
     bot = Bot(token=token)
     
     await remove_keyboard_in_group(bot)
+
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(check_auto_unban, "interval", minutes=1, args=(bot,))
+    scheduler.start()
     
     dp = Dispatcher()
     from пользователи.user import user
