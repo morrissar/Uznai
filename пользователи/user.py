@@ -58,7 +58,7 @@ class BanCheckMiddleware(BaseMiddleware):
             current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
             cursor.execute(
-                "SELECT time_ban, cause FROM banned WHERE user_id = ? AND time_ban > ?", 
+                "SELECT time_ban, cause FROM banned WHERE id = ? AND time_ban > ?", 
                 (user_id, current_time_str)
             )
             ban_record = cursor.fetchone()
@@ -84,7 +84,7 @@ class BanCheckMiddleware(BaseMiddleware):
                 return
                 
         return await handler(event, data)
-
+        
 user.message.middleware(BanCheckMiddleware())
 
 async def check_subscription(user_id: int, bot: Bot) -> bool:
