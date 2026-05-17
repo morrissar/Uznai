@@ -90,7 +90,7 @@ async def ban(message: Message, bot: Bot):
     else: 
         user_name = f'ID: {user_id}'
     
-    await message.reply(f'Пользователь {user_name} успешно забанен на {time_ban}ч по причине {cause}.')
+    await message.reply(f'Пользователь {user_name} успешно заблокирован на {time_ban}ч по причине {cause}.')
 
 @helper_router.message(F.chat.id == -1003620787834, F.text.startswith('/vsem'))
 async def send_to_all(message: Message, bot: Bot):
