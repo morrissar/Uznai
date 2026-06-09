@@ -66,7 +66,7 @@ async def send_scheduled_posts(bot: Bot, message_ids: list, admin_chat_id: int, 
         if thread_id in active_autopost_tasks:
             del active_autopost_tasks[thread_id]
 
-@helper_router.message(F.chat.id == ADMIN_GROUP_ID, F.message_thread_id == AUTOPOST_THREAD_ID, Command('start'))
+@helper_router.message(F.chat.id == ADMIN_GROUP_ID, F.message_thread_id == AUTOPOST_THREAD_ID, Command('autopost'))
 async def start_autopost(message: Message, state: FSMContext):
     if AUTOPOST_THREAD_ID in active_autopost_tasks:
         await message.reply('в данный момент уже идет рассылка! остановите её командой /stop перед запуском новой.')
