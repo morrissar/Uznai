@@ -19,7 +19,7 @@ def load_json_map(filename):
 async def check_auto_unban(bot: Bot):
     cursor = db.conn.cursor()
     current_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    cursor.execute("SELECT user_id FROM banned WHERE time_ban <= ?", (current_time_str,))
+    cursor.execute("SELECT id FROM banned WHERE time_ban <= ?", (current_time_str,))
     expired_bans = cursor.fetchall()
         
     for row in expired_bans:
