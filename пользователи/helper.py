@@ -1,7 +1,7 @@
 import os
 import json
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone    
 from aiogram import Router, Bot, F
 from aiogram.types import Message, FSInputFile
 from aiogram.fsm.context import FSMContext
@@ -32,8 +32,16 @@ def load_json_map(filename):
     return {}
 
 async def send_scheduled_posts(bot: Bot, message_ids: list, admin_chat_id: int, interval_minutes: int, thread_id: int):
+    tz_utc_8 = timezone(timedelta(hours=8))
+    
     try:
         for idx, msg_id in enumerate(message_ids):
+            now = datetime.now(tz_utc_8)
+            if now.hour < 12:
+                target = now.replace(hour=12, minute=0, second=0, microsecond=0)
+                sleep_seconds = (target - now).total_seconds()
+                await asyncio.sleep(sleep_seconds)
+
             try:
                 await bot.copy_message(
                     chat_id=CHANNEL_ID, 
