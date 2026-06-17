@@ -122,21 +122,36 @@ async def process_interval(message: Message, state: FSMContext, bot: Bot):
     
     await state.clear()
     
-    total_minutes = interval_minutes * (target_count - 1)
-    hours = total_minutes // 60
-    minutes = total_minutes % 60
+    tz_utc_8 = timezone(timedelta(hours=8))
+    end_time = datetime.now(tz_utc_8)
+    
+    for i in range(target_count):
+        if end_time.hour < 12:
+            end_time = end_time.replace(hour=12, minute=0, second=0, microsecond=0)
+        if i < target_count - 1:
+            end_time += timedelta(minutes=interval_minutes)
+            
+    end_time_str = end_time.strftime('%d.%m.%Y в %H:%M')
+    
+    total_time_diff = end_time - datetime.now(tz_utc_8)
+    days = total_time_diff.days
+    hours = total_time_diff.seconds // 3600
+    minutes = (total_time_diff.seconds % 3600) // 60
     
     time_str = ''
+    if days > 0:
+        time_str += f'{days} дн. '
     if hours > 0:
         time_str += f'{hours} ч. '
-    time_str += f'{minutes} мин.' if minutes > 0 or hours == 0 else ''
+    time_str += f'{minutes} мин.' if minutes > 0 or (days == 0 and hours == 0) else ''
     
     await message.reply(
         f'<b>запускаю рассылку!</b>\n'
         f'всего постов: {target_count}\n'
         f'интервал: {interval_minutes} мин.\n'
-        f'процесс займет примерно: {time_str}\n\n'
-        f'<i>Для досрочной отмены напишите /stop</i>',
+        f'окончание: <b>{end_time_str}</b> (МСК+5)\n'
+        f'весь процесс займет: {time_str}\n\n'
+        f'<i>для досрочной отмены напишите /stop</i>',
         parse_mode='HTML'
     )
     
